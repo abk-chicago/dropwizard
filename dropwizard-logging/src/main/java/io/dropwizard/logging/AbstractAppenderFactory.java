@@ -14,10 +14,12 @@ import com.google.common.collect.ImmutableList;
 import io.dropwizard.logging.async.AsyncAppenderFactory;
 import io.dropwizard.logging.filter.FilterFactory;
 import io.dropwizard.logging.layout.LayoutFactory;
+import org.slf4j.LoggerFactory;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -100,7 +102,7 @@ public abstract class AbstractAppenderFactory<E extends DeferredProcessingAware>
     private boolean includeCallerData = false;
 
     private ImmutableList<FilterFactory<E>> filterFactories = ImmutableList.of();
-    
+
     private boolean neverBlock = false;
 
     @JsonProperty
@@ -149,6 +151,19 @@ public abstract class AbstractAppenderFactory<E extends DeferredProcessingAware>
     }
 
     @JsonProperty
+    public void setTimeZone(String zoneId) {
+        if (zoneId.equalsIgnoreCase("system")) {
+            this.timeZone = TimeZone.getDefault();
+        } else {
+            if (Arrays.asList(TimeZone.getAvailableIDs()).contains(zoneId)) {
+                this.timeZone = TimeZone.getTimeZone(zoneId);
+            } else {
+                LoggerFactory.getLogger(getClass()).warn("Unknown timezone '{}' provided, using UTC", zoneId);
+            }
+        }
+    }
+
+    @JsonProperty
     public void setTimeZone(TimeZone timeZone) {
         this.timeZone = timeZone;
     }
@@ -172,7 +187,7 @@ public abstract class AbstractAppenderFactory<E extends DeferredProcessingAware>
     public void setFilterFactories(List<FilterFactory<E>> appenders) {
         this.filterFactories = ImmutableList.copyOf(appenders);
     }
-    
+
     @JsonProperty
     public void setNeverBlock(boolean neverBlock) {
         this.neverBlock = neverBlock;
